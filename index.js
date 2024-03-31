@@ -7,7 +7,6 @@ app.use(express.json());
 const port = 5000;
 app.use(cors());
 
-
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.jeu0kz0.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
   serverApi: {
@@ -26,39 +25,61 @@ async function run() {
     const userCollection = database.collection("userCollection");
     //USER related CRUD
 
-    app.get("/users",async(req,res)=>{
-      const datafromDb = userCollection.find()
-      const theData = await datafromDb.toArray()
-      res.send(theData)
+    app.get("/users", async (req, res) => {
+      const datafromDb = userCollection.find();
+      const theData = await datafromDb.toArray();
+      res.send(theData);
+    });
+    app.get("/user/:id",async(req,res)=>{
+      const email = req.params.id;
+      console.log(email)
+
+      const query = {email:email};
+      const user = await userCollection.findOne(query)
+      console.log("user",user)
+      res.send(user)
     })
-    app.post("/user",async(req,res)=>{
+
+
+    app.post("/user", async (req, res) => {
       const data = req.body;
-      const result = await userCollection.insertOne(data)
-      res.send(result)
-    })
-    app.delete("/user/:id",async(req,res)=>{
+
+      const result = await userCollection.insertOne(data);
+      res.send(result);
+    });
+    app.delete("/user/:id", async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)}
-      const d = userCollection.deleteOne(query)
-      res.send(d)
-    })
-    app.patch("/users",async(req,res)=>{
+      const query = { _id: new ObjectId(id) };
+      const d = userCollection.deleteOne(query);
+      res.send(d);
+    });
+    
+    app.patch("/users", async (req, res) => {
       // const email = req.params.email;
-      const {email,lastSignInTime}= req.body
-      const query = {email: email}
-      const options = {upsert:true}
-      const updateDoc = {
-        $set:{
-          lastSignInTime: lastSignInTime
-        }
+      const { email, lastSignInTime } = req.body;
+      const dataCount = await userCollection.countDocuments();
+      // console.log(dataCount)
+      if (dataCount === 0) {
+        req.body.admin = "true";
       }
-      const result = await userCollection.updateOne(
-        query,
-        updateDoc,
-        options
-      );
-      res.send(result)
-    })
+      console.log(req.body);
+      const query = { email: email };
+      const options = { upsert: true };
+      const updateDoc = req.body.admin
+        ? {
+            $set: {
+              lastSignInTime: lastSignInTime,
+              admin: "true",
+            },
+          }
+        : {
+            $set: {
+              lastSignInTime: lastSignInTime,
+            },
+          };
+      const result = await userCollection.updateOne(query, updateDoc, options);
+      res.send(result);
+    });
     // coffee related CRUD
     app.get("/coffee", async (req, res) => {
       const datafromdb = coffeeCollection.find();
