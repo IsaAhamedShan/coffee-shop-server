@@ -23,6 +23,9 @@ async function run() {
     const database = client.db("coffeeShop");
     const coffeeCollection = database.collection("coffeeDetails");
     const userCollection = database.collection("userCollection");
+    const userPurchaseCollection = database.collection(
+      "userPurchaseCollection"
+    );
     //USER related CRUD
 
     app.get("/users", async (req, res) => {
@@ -30,17 +33,22 @@ async function run() {
       const theData = await datafromDb.toArray();
       res.send(theData);
     });
-    app.get("/user/:id",async(req,res)=>{
+    app.get("/user/:id", async (req, res) => {
       const email = req.params.id;
-      console.log(email)
+      console.log(email);
 
-      const query = {email:email};
-      const user = await userCollection.findOne(query)
-      console.log("user",user)
-      res.send(user)
-    })
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      console.log("user", user);
+      res.send(user);
+    });
 
-
+    app.post("/saveCart", async (req, res) => {
+      const data = req.body;
+      console.log(data);
+      let result = await userPurchaseCollection.insertOne(data);
+      res.send(result);
+    });
     app.post("/user", async (req, res) => {
       const data = req.body;
 
@@ -53,7 +61,7 @@ async function run() {
       const d = userCollection.deleteOne(query);
       res.send(d);
     });
-    
+
     app.patch("/users", async (req, res) => {
       // const email = req.params.email;
       const { email, lastSignInTime } = req.body;
