@@ -43,6 +43,11 @@ async function run() {
       res.send(user);
     });
 
+    app.get("/userInvoiceHistory", async (req, res) => {
+      const result = await userPurchaseCollection.find().toArray();
+      res.send(result);
+    });
+
     app.post("/saveCart", async (req, res) => {
       const data = req.body;
       console.log(data);
